@@ -1,0 +1,26 @@
+{
+  "name": "mern-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A MERN stack customer relationship management system.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview",
+    "backend": "npm --prefix backend run dev",
+    "seed": "npm --prefix backend run seed"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.1",
+    "@vitejs/plugin-react": "^6.0.3",
+    "axios": "^1.18.1",
+    "lucide-react": "^1.21.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.0",
+    "recharts": "^3.9.0",
+    "tailwindcss": "^4.3.1",
+    "vite": "^8.1.0"
+  }
+}
