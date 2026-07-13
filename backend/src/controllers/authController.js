@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import { generateToken } from '../utils/generateToken.js';
 import { sendWelcomeEmail } from '../utils/sendEmail.js';
+import { track } from '../utils/pulseiq.js';
 
 const cookieOptions = () => ({
   httpOnly: true,
@@ -46,6 +47,8 @@ export const signup = async (req, res, next) => {
 
     sendAuthResponse(res, 201, user);
 
+    track("user_registered", user._id, { email: user.email, role: user.role });
+
     sendWelcomeEmail({
       to: user.email,
       userName: user.name,
@@ -67,6 +70,7 @@ export const login = async (req, res, next) => {
     }
 
     sendAuthResponse(res, 200, user);
+    track("user_logged_in", user._id, { email: user.email, role: user.role });
   } catch (error) {
     next(error);
   }

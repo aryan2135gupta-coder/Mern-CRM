@@ -9,6 +9,7 @@ import {
   sendLeadStatusUpdatedEmail
 } from '../utils/sendEmail.js';
 import { getLeadAiInsights } from '../utils/gemini.js';
+import { track } from '../utils/pulseiq.js';
 
 const canAccessLead = (user, lead) => {
   return user.role === 'admin' || lead.assignedAgent._id.toString() === user._id.toString();
@@ -162,6 +163,8 @@ export const createLead = async (req, res, next) => {
       to: lead.email,
       leadName: lead.name
     }).catch((err) => console.error(`Error sending lead creation confirmation: ${err.message}`));
+
+    track("lead_created", req.user._id, { leadId: lead._id, leadName: lead.name, status: lead.status });
 
     res.status(201).json({
       success: true,
@@ -317,6 +320,8 @@ export const updateLead = async (req, res, next) => {
         oldStatus,
         newStatus: lead.status
       }).catch((err) => console.error(`Error sending status update email: ${err.message}`));
+
+      track("lead_status_changed", req.user._id, { leadId: lead._id, leadName: lead.name, oldStatus, newStatus: lead.status });
     }
 
     res.status(200).json({
@@ -355,6 +360,8 @@ export const deleteLead = async (req, res, next) => {
     }
 
     await lead.deleteOne();
+
+    track("lead_deleted", req.user._id, { leadId: lead._id, leadName: lead.name });
 
     res.status(200).json({
       success: true,

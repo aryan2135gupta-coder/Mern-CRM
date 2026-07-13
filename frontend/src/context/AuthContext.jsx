@@ -18,6 +18,9 @@ export const AuthProvider = ({ children }) => {
       try {
         const { data } = await api.get('/auth/me');
         setUser(data.data.user);
+        if (window.PulseIQ) {
+          window.PulseIQ.identify(data.data.user.id || data.data.user._id);
+        }
       } catch {
         localStorage.removeItem('mern_crm_token');
         setToken(null);
@@ -45,6 +48,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('mern_crm_token', data.token);
     setToken(data.token);
     setUser(data.data.user);
+    if (window.PulseIQ) {
+      window.PulseIQ.identify(data.data.user.id || data.data.user._id);
+      window.PulseIQ.track('login_success', { email: data.data.user.email });
+    }
   };
 
   const signup = async (payload) => {
@@ -52,6 +59,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('mern_crm_token', data.token);
     setToken(data.token);
     setUser(data.data.user);
+    if (window.PulseIQ) {
+      window.PulseIQ.identify(data.data.user.id || data.data.user._id);
+      window.PulseIQ.track('signup_success', { email: data.data.user.email });
+    }
   };
 
   const logout = async () => {
@@ -59,8 +70,12 @@ export const AuthProvider = ({ children }) => {
       await api.post('/auth/logout');
     } finally {
       localStorage.removeItem('mern_crm_token');
+      localStorage.removeItem('_piq_user');
       setToken(null);
       setUser(null);
+      if (window.PulseIQ) {
+        window.PulseIQ.track('logout');
+      }
     }
   };
 

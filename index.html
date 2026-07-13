@@ -4,6 +4,90 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MERN CRM</title>
+    <!-- PulseIQ Analytics SDK -->
+    <script>
+    (function() {
+      var PulseIQ = {
+        apiKey: "pk_7b54085eb2484c3497851be4cc842ffc",
+        projectId: "6a5513bb4341710d2dcff26b",
+        endpoint: "https://pulseiq-ffio.onrender.com/api/ingest/event",
+        getAnonId: function() {
+          var id = localStorage.getItem("_piq_anon");
+          if (!id) {
+            id = "anon_" + Math.random().toString(36).slice(2, 11);
+            localStorage.setItem("_piq_anon", id);
+          }
+          return id;
+        },
+        getSessionId: function() {
+          var id = sessionStorage.getItem("_piq_session");
+          if (!id) {
+            id = "sess_" + Math.random().toString(36).slice(2, 11);
+            sessionStorage.setItem("_piq_session", id);
+          }
+          return id;
+        },
+        track: function(eventName, properties) {
+          fetch(this.endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": this.apiKey
+            },
+            body: JSON.stringify({
+              projectId: this.projectId,
+              eventName: eventName,
+              sessionId: this.getSessionId(),
+              userId: localStorage.getItem("_piq_user") || undefined,
+              anonymousId: this.getAnonId(),
+              properties: Object.assign({
+                page: window.location.pathname,
+                referrer: document.referrer
+              }, properties || {})
+            })
+          }).catch(function() {});
+        },
+        identify: function(userId) {
+          localStorage.setItem("_piq_user", String(userId));
+          this.track("identify", { userId: userId });
+        }
+      };
+
+      var lastTrackedPage = "";
+
+      function getCurrentPageKey() {
+        return window.location.pathname + window.location.search + window.location.hash;
+      }
+
+      function trackCurrentPage(extra) {
+        var nextPage = getCurrentPageKey();
+        if (!nextPage || nextPage === lastTrackedPage) return;
+        lastTrackedPage = nextPage;
+        PulseIQ.track("page_view", Object.assign({ path: nextPage }, extra || {}));
+      }
+
+      function attachRouteTracking() {
+        var wrap = function(method) {
+          var original = history[method];
+          if (typeof original !== "function") return;
+          history[method] = function() {
+            var result = original.apply(this, arguments);
+            setTimeout(trackCurrentPage, 0);
+            return result;
+          };
+        };
+
+        wrap("pushState");
+        wrap("replaceState");
+        window.addEventListener("popstate", trackCurrentPage);
+        window.addEventListener("hashchange", trackCurrentPage);
+      }
+
+      window.PulseIQ = PulseIQ;
+      attachRouteTracking();
+      trackCurrentPage();
+    })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
